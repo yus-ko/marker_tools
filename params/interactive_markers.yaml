@@ -1,0 +1,41 @@
+markers:
+  - name: marker_0
+    type: sphere
+    pose:
+      position:
+        x: 0.82406133413314819
+        y: -0.50014239549636841
+        z: 5.9604644775390625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+  - name: marker_1
+    type: cube
+    pose:
+      position:
+        x: 0.29683607816696167
+        y: 0.18336331844329834
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.1
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 1
+      b: 0
+      a: 1

@@ -53,6 +53,11 @@ install(TARGETS
   trajectory_recoder
   DESTINATION lib/${PROJECT_NAME})
 
+install(DIRECTORY
+  launch params
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_export_targets(export_marker_tools)
 ament_export_dependencies(
   rclcpp

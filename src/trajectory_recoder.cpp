@@ -36,6 +36,17 @@ namespace potbot_lib{
 				[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
 					this->clearTrajectory(feedback);});
 			
+			interactive_markers::MenuHandler::EntryHandle save_entry = menu_handler_->insert(
+				entry_handle_save_, "trajectory");
+
+			menu_handler_->insert(save_entry, "csv", 
+				[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
+					this->saveTrajectory(feedback, "csv");});
+
+			menu_handler_->insert(save_entry, "yaml", 
+				[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
+					this->saveTrajectory(feedback, "yaml");});
+			
 			for (const auto &cm:controllable_markers_)
 			{
 				menu_handler_->apply(*imsrv_, cm.first);
@@ -187,7 +198,7 @@ namespace potbot_lib{
 		{
 			// RCLCPP_INFO(this->get_logger(),"markerFeedback");
 			visualization_msgs::msg::InteractiveMarker int_marker;
-			if (imsrv_->get(feedback->marker_name, int_marker))
+			if (imsrv_->get(feedback->marker_name, int_marker) && contains(feedback->marker_name, trajectory_))
 			{
 				potbot_lib::Pose pose = potbot_lib::utility::get_pose(int_marker.pose);
 
@@ -202,14 +213,18 @@ namespace potbot_lib{
 					trajectory_[int_marker.name].publish();
 				}				
 
-				RCLCPP_INFO(this->get_logger(),"%d", int(trajectory_[int_marker.name].trajectory.size()));
+				RCLCPP_DEBUG(this->get_logger(),"[%s]: pose: %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, size: %d",
+					int_marker.name.c_str(),
+					pose.position.x, pose.position.y, pose.position.z,
+					pose.rotation.x, pose.rotation.y, pose.rotation.z,
+					int(trajectory_[int_marker.name].trajectory.size()));
 			}
 		}
 
 		void TrajectoryRecoder::clearTrajectory(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
 		{
 			visualization_msgs::msg::InteractiveMarker int_marker;
-			if (imsrv_->get(feedback->marker_name, int_marker))
+			if (imsrv_->get(feedback->marker_name, int_marker) && contains(feedback->marker_name, trajectory_))
 			{
 				auto latest_pose = trajectory_[int_marker.name].trajectory.back();
 				auto latest_header = trajectory_[int_marker.name].headers.back();
@@ -218,6 +233,38 @@ namespace potbot_lib{
 				trajectory_[int_marker.name].trajectory.push_back(latest_pose);
 				trajectory_[int_marker.name].headers.push_back(latest_header);
 				trajectory_[int_marker.name].publish();
+				RCLCPP_INFO(this->get_logger(),"[%s]: trajectory cleared", int_marker.name.c_str());
+			}
+		}
+
+		void TrajectoryRecoder::saveTrajectory(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, std::string type)
+		{
+			visualization_msgs::msg::InteractiveMarker int_marker;
+			if (imsrv_->get(feedback->marker_name, int_marker) && contains(feedback->marker_name, trajectory_))
+			{
+				std::string file_path = int_marker.name + "_trajectory." + type;
+
+				bool successful = true;
+				if (type == "csv")
+				{
+					successful = saveCSV(int_marker.name, file_path);
+				}
+				else if (type == "yaml")
+				{
+					successful = saveYAML(int_marker.name, file_path);
+				}
+
+				if (successful)
+				{
+					RCLCPP_INFO(this->get_logger(),"[%s]: trajectory saved", int_marker.name.c_str());
+					RCLCPP_INFO(this->get_logger(),"[%s]: %s", int_marker.name.c_str(), file_path.c_str());
+				}
+				else
+				{
+					RCLCPP_WARN(this->get_logger(),"[%s]: trajectory save failed", int_marker.name.c_str());
+					RCLCPP_WARN(this->get_logger(),"[%s]: %s", int_marker.name.c_str(), file_path.c_str());
+				}
 			}
 		}
 
@@ -374,80 +421,84 @@ namespace potbot_lib{
 		// 	return true;
 		// }
 
-		// bool InteractiveMarkerManager::serviceSaveMarkerTrajectory(potbot_lib::Save::Request &req, potbot_lib::Save::Response &resp)
-		// {
-		// 	std::string marker_name = req.save_target;
-		// 	int id = 0;
+		bool TrajectoryRecoder::saveCSV(std::string marker_name, std::string file_path)
+		{
 
-		// 	if (marker_name == "")
-		// 	{
-		// 		marker_name = visual_markers_[0].marker.text;
-		// 	}
-		// 	else
-		// 	{
-		// 		id = getMarkerId(marker_name);
-		// 		if (id == -1)
-		// 		{
-		// 			resp.success = false;
-		// 			resp.message = "Invalid save_target: " + marker_name;
-		// 			return false;
-		// 		}
-		// 	}
-			
-		// 	std::string csv_path = req.full_path;
+			// size_t last_slash_pos = csv_path.find_last_of('/');
+			// std::string directory_path = csv_path.substr(0, last_slash_pos);
 
-		// 	if (csv_path == "")
-		// 	{
-		// 		csv_path = std::string(std::getenv("HOME")) + "/.ros/marker/trajectory/" + marker_name + ".csv";
-		// 	}
+			// ディレクトリが存在するか確認し、存在しない場合は作成
+			// if (!directoryExists(directory_path)) 
+			// {
+			// 	if (!createDirectoriesRecursively(directory_path)) 
+			// 	{
+			// 		ROS_ERROR_STREAM("Failed to create directory: " << directory_path);
+			// 		resp.success = false;
+			// 		resp.message = "Failed to create directory: " + directory_path;
+			// 		return false;
+			// 	}
+			// }
 
-		// 	size_t last_slash_pos = csv_path.find_last_of('/');
-		// 	std::string directory_path = csv_path.substr(0, last_slash_pos);
+			std::ofstream csv_file(file_path);
 
-		// 	// ディレクトリが存在するか確認し、存在しない場合は作成
-		// 	if (!directoryExists(directory_path)) 
-		// 	{
-		// 		if (!createDirectoriesRecursively(directory_path)) 
-		// 		{
-		// 			ROS_ERROR_STREAM("Failed to create directory: " << directory_path);
-		// 			resp.success = false;
-		// 			resp.message = "Failed to create directory: " + directory_path;
-		// 			return false;
-		// 		}
-		// 	}
+			if (csv_file.is_open()) 
+			{
+				for (const auto& p : trajectory_[marker_name].trajectory) 
+				{
+					csv_file	<< p.position.x << ","
+								<< p.position.y << ","
+								<< p.position.z << ","
+								<< p.rotation.x << ","
+								<< p.rotation.y << ","
+								<< p.rotation.z << "\n";
+				}
+				csv_file.close();
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 
-		// 	std::ofstream csv_file(csv_path);
+		bool TrajectoryRecoder::saveYAML(std::string marker_name, std::string file_path)
+		{
+			YAML::Node root;
+			YAML::Node node = root[marker_name]["path"];
 
-		// 	if (csv_file.is_open()) 
-		// 	{
-		// 		for (const auto& p : visual_markers_[id].trajectory) 
-		// 		{
-		// 			double roll,pitch,yaw;
-		// 			utility::get_rpy(p.pose.orientation, roll, pitch, yaw);
+			for (const auto& p:trajectory_[marker_name].trajectory)
+			{
+				YAML::Node child;
 
-		// 			csv_file	<< p.pose.position.x 	<< ","
-		// 						<< p.pose.position.y 	<< ","
-		// 						<< p.pose.position.z 	<< ","
-		// 						<< roll 				<< ","
-		// 						<< pitch 				<< ","
-		// 						<< yaw 					<< "\n";
-		// 		}
-		// 		csv_file.close();
+				child["pose"]["position"]["x"] = p.position.x;
+				child["pose"]["position"]["y"] = p.position.y;
+				child["pose"]["position"]["z"] = p.position.z;
 
-		// 		ROS_INFO_STREAM("Saved to: " << csv_path);
-		// 		resp.success = true;
-		// 		resp.message = "Saved to: " + csv_path;
-		// 		return true;
-		// 	} 
-		// 	else 
-		// 	{
-		// 		ROS_ERROR_STREAM("Failed to open file: " << csv_path);
-		// 		resp.success = false;
-		// 		resp.message = "Failed to open file: " + csv_path;
-		// 		return false;
-		// 	}
-			
-		// }
+				child["pose"]["rotation"]["roll"] = p.rotation.x;
+				child["pose"]["rotation"]["pitch"] = p.rotation.y;
+				child["pose"]["rotation"]["yaw"] = p.rotation.z;
+
+				node.push_back(child);
+			}
+
+			try 
+			{
+				std::ofstream ofs(file_path);
+				ofs << root;
+				ofs.close();
+				return true;
+			} 
+			catch (const std::exception& e) 
+			{
+				return false;
+			}
+		}
+
+		bool TrajectoryRecoder::contains(std::string key, const std::map<std::string, TrajectoryInfo> &map)
+		{
+			auto it = map.find(key);
+			return (it != map.end());
+		}
 
 		// bool InteractiveMarkerManager::serviceClearMarkerTrajectory(potbot_lib::Save::Request &req, potbot_lib::Save::Response &resp)
 		// {
