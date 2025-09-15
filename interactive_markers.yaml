@@ -1,0 +1,21 @@
+markers:
+  - name: marker
+    type: sphere
+    pose:
+      position:
+        x: 0.57686471939086914
+        y: 1.0618776082992554
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
