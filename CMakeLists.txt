@@ -10,6 +10,7 @@ include_directories(include)
 
 add_library(marker_tools
   src/trajectory_recoder.cpp
+  src/waypoint_editor.cpp
 )
 
 ament_target_dependencies(marker_tools
@@ -43,14 +44,23 @@ add_executable(trajectory_recoder
 )
 ament_target_dependencies(trajectory_recoder
   rclcpp
-  nav2_util
   potbot_ros
 )
 target_link_libraries(trajectory_recoder marker_tools)
 
+add_executable(waypoint_editor
+  src/node/waypoint_editor.cpp
+)
+ament_target_dependencies(waypoint_editor
+  rclcpp
+  potbot_ros
+)
+target_link_libraries(waypoint_editor marker_tools)
+
 install(TARGETS
   base_marker
   trajectory_recoder
+  waypoint_editor
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

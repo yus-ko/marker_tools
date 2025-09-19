@@ -35,9 +35,6 @@ namespace potbot_lib{
         {
             private:
 
-                // ros::ServiceServer srv_save_marker_trajectory_, srv_clear_marker_trajectory_;
-
-                size_t interactive_marker_num_ = 1;
                 std::map<std::string, TrajectoryInfo> trajectory_;
 
                 rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
@@ -48,7 +45,7 @@ namespace potbot_lib{
                 void initializeMenu();
                 void initializeMarker();
 
-                void interpolateTrajectory(size_t id);
+                std::vector<potbot_lib::Pose> interpolateTrajectory(const std::vector<potbot_lib::Pose>& trajectory);
 
                 void clearTrajectory(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
                 void saveTrajectory(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, std::string type = "csv");

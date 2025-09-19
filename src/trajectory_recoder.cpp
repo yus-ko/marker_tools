@@ -203,12 +203,15 @@ namespace potbot_lib{
 				potbot_lib::Pose pose = potbot_lib::utility::get_pose(int_marker.pose);
 
 				if (pose != trajectory_[int_marker.name].trajectory.back())
+				// ((pose.to_affine().translation() - trajectory_[int_marker.name].trajectory.back().to_affine().translation()).norm() > 0.02)
 				{
 					std_msgs::msg::Header header;
 					header.frame_id = frame_id_global_;
 					header.stamp = this->get_clock()->now();
 					trajectory_[int_marker.name].headers.push_back(header);
 					trajectory_[int_marker.name].trajectory.push_back(pose);
+
+					// trajectory_[int_marker.name].trajectory = interpolateTrajectory(trajectory_[int_marker.name].trajectory);
 					
 					trajectory_[int_marker.name].publish();
 				}				
@@ -268,98 +271,44 @@ namespace potbot_lib{
 			}
 		}
 
-		void TrajectoryRecoder::interpolateTrajectory(size_t id)
-		{
-			// if (visual_markers_[id].trajectory.empty())
+		std::vector<potbot_lib::Pose> TrajectoryRecoder::interpolateTrajectory(const std::vector<potbot_lib::Pose>& trajectory)
+		{	
+			auto points_num = trajectory.size();
+			if (points_num < 2)
+			{
+				return trajectory;
+			}
+
+			size_t interpolate_num_limit = 50;
+			static size_t last_interpolated_index = 0;
+			std::vector<Pose> no_interpolate, to_interpolate, interpolated, out;
+			if (points_num > interpolate_num_limit)
+			{
+				to_interpolate = std::vector<Pose>(trajectory.end() - interpolate_num_limit, trajectory.end());
+				no_interpolate = std::vector<Pose>(trajectory.begin(), trajectory.end() - interpolate_num_limit);
+			}
+			else
+				to_interpolate = trajectory;
+
+			interpolate::bezier(to_interpolate, to_interpolate.size(), interpolated);
+			// interpolated.insert(trajectory.begin(), no_interpolate.begin(), no_interpolate.end());
+			for (const auto& p:no_interpolate)
+				out.push_back(p);
+			for (const auto& p:interpolated)
+				out.push_back(p);
+			RCLCPP_INFO(this->get_logger(), "%d, %d", int(to_interpolate.size()), int(no_interpolate.size()));
+		
+			// // std::vector<Eigen::Affine3d> traj_vecs = utility::get_vec(split_traj);
+			// if (visual_markers_[id].trajectory_interpolation_method == "spline")
 			// {
-			// 	geometry_msgs::msg::PoseStamped p;
-			// 	p.header = visual_markers_[id].marker.header;
-			// 	p.pose = visual_markers_[id].marker.pose;
-			// 	visual_markers_[id].trajectory.push_back(p);
+			// 	// interpolate::spline(traj_vecs, traj_vecs.size(), traj_vecs);
+			// 	interpolate::bezier(split_traj, split_traj.size(), interpolated);
 			// }
-			
-			// double distance_to_pre = utility::get_distance(visual_markers_[id].marker.pose, visual_markers_[id].trajectory.back().pose);
-			// if (distance_to_pre > 0.01)
+			// else if (visual_markers_[id].trajectory_interpolation_method == "bezier")
 			// {
-			// 	geometry_msgs::msg::PoseStamped pose;
-			// 	pose.header.frame_id = frame_id_global_;
-			// 	pose.header.stamp = this->get_clock()->now();
-			// 	pose.pose = visual_markers_[id].marker.pose;
-
-			// 	if (distance_to_pre > 0.05)
-			// 	{
-			// 		std::vector<geometry_msgs::msg::PoseStamped> start_end(2);
-			// 		start_end[0] = visual_markers_[id].trajectory.back();
-			// 		start_end[1] = pose;
-					
-			// 		std::vector<Eigen::Vector2d> interp_vecs;
-			// 		utility::to_mat(start_end,interp_vecs);
-			// 		interpolate::linear(interp_vecs, int(distance_to_pre/0.05), interp_vecs);
-			// 		utility::to_msg(interp_vecs,start_end);
-
-			// 		RCLCPP_DEBUG(this->get_logger(), "distance_to_pre: %f, linear_interpolate_num: %d", distance_to_pre, (int)start_end.size());
-
-			// 		for (size_t i = 1; i < start_end.size(); i++)
-			// 		{
-			// 			start_end[i].header = pose.header;
-			// 			visual_markers_[id].trajectory.push_back(start_end[i]);
-			// 		}
-			// 	}
-			// 	else
-			// 	{
-			// 		visual_markers_[id].trajectory.push_back(pose);
-			// 	}
-
-			// 	auto* points = &visual_markers_[id].trajectory;
-			// 	size_t num = points->size();
-			// 	size_t interpolate_num_limit = 50;
-			// 	static size_t last_interpolated_index = 0;
-			// 	if (num > 1)
-			// 	{
-			// 		std::vector<geometry_msgs::msg::PoseStamped> split_traj;
-			// 		if (num > interpolate_num_limit)
-			// 		{
-			// 			for (size_t i = num - interpolate_num_limit; i < num; i++)
-			// 			{
-			// 				split_traj.push_back((*points)[i]);
-			// 			}
-			// 		}
-			// 		else
-			// 		{
-			// 			split_traj = *points;
-			// 		}
-					
-			// 		if (split_traj.size() > 1)
-			// 		{
-			// 			std::vector<Eigen::Vector2d> traj_vecs;
-			// 			utility::to_mat(split_traj,traj_vecs);
-			// 			if (visual_markers_[id].trajectory_interpolation_method == "spline")
-			// 			{
-			// 				interpolate::spline(traj_vecs, traj_vecs.size(), traj_vecs);
-			// 			}
-			// 			else if (visual_markers_[id].trajectory_interpolation_method == "bezier")
-			// 			{
-			// 				interpolate::bezier(traj_vecs, traj_vecs.size(), traj_vecs);
-			// 			}
-			// 			utility::to_msg(traj_vecs,split_traj);
-			// 		}
-
-			// 		if (num > interpolate_num_limit)
-			// 		{
-			// 			for (size_t i = 0; i < split_traj.size(); i++)
-			// 			{
-			// 				visual_markers_[id].trajectory[i+num-interpolate_num_limit] = split_traj[i];
-			// 			}
-			// 		}
-			// 		else
-			// 		{
-			// 			visual_markers_[id].trajectory = split_traj;
-			// 		}
-			// 		RCLCPP_DEBUG(this->get_logger(), "interpolate size: %d, trajectories_[%d]_size: %d", (int)split_traj.size(), (int)id, (int)visual_markers_[id].trajectory.size());
-
-			// 	}
-			// 	publishMarkerTrajectory();
+			// 	interpolate::bezier(split_traj, split_traj.size(), interpolated);
 			// }
+			return out;
 		}
 
 		// bool directoryExists(const std::string &path) 
