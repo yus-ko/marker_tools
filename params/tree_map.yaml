@@ -1,0 +1,244 @@
+markers:
+  - name: marker
+    type: sphere
+    pose:
+      position:
+        x: 0.97596406936645508
+        y: 1.1879582405090332
+        z: -2.384185791015625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker
+    parent: 
+    children:
+      - marker_0
+      - marker_8
+  - name: marker_0
+    type: sphere
+    pose:
+      position:
+        x: 1.4141302108764648
+        y: 1.693150520324707
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_0
+    parent: marker
+    children:
+      - marker_1
+      - marker_2
+      - marker_3
+  - name: marker_1
+    type: sphere
+    pose:
+      position:
+        x: 1.8660112619400024
+        y: 2.4387276172637939
+        z: 2.384185791015625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_1
+    parent: marker_0
+    children:
+      - marker_7
+  - name: marker_2
+    type: sphere
+    pose:
+      position:
+        x: 2.2183787822723389
+        y: 2.0575258731842041
+        z: 2.384185791015625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_2
+    parent: marker_0
+    children:
+      []
+  - name: marker_3
+    type: sphere
+    pose:
+      position:
+        x: 1.4538408517837524
+        y: 2.0821418762207031
+        z: -2.384185791015625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_3
+    parent: marker_0
+    children:
+      - marker_4
+  - name: marker_4
+    type: sphere
+    pose:
+      position:
+        x: 1.2502788305282593
+        y: 2.7000374794006348
+        z: -7.152557373046875e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_4
+    parent: marker_3
+    children:
+      - marker_5
+  - name: marker_5
+    type: sphere
+    pose:
+      position:
+        x: 1.7680885791778564
+        y: 2.932422399520874
+        z: -2.384185791015625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_5
+    parent: marker_4
+    children:
+      - marker_6
+  - name: marker_6
+    type: sphere
+    pose:
+      position:
+        x: 2.3538408517837524
+        y: 2.9821418762207026
+        z: -2.384185791015625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_6
+    parent: marker_5
+    children:
+      []
+  - name: marker_7
+    type: sphere
+    pose:
+      position:
+        x: 2.3500683784484862
+        y: 2.6424911499023436
+        z: 2.384185791015625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_7
+    parent: marker_1
+    children:
+      []
+  - name: marker_8
+    type: sphere
+    pose:
+      position:
+        x: 1.450269341468811
+        y: 1.321629524230957
+        z: -2.384185791015625e-07
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_8
+    parent: marker
+    children:
+      []

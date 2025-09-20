@@ -15,10 +15,10 @@ namespace potbot_lib{
 			// srv_save_marker_trajectory_ = pnh.advertiseService("save_marker_tarajectory", &InteractiveMarkerManager::serviceSaveMarkerTrajectory, this);
 			// srv_clear_marker_trajectory_ = pnh.advertiseService("clear_marker_tarajectory", &InteractiveMarkerManager::serviceClearMarkerTrajectory, this);
 			
-			RCLCPP_INFO(this->get_logger(), "TrajectoryRecoder initialized");
+			RCLCPP_INFO(this->get_logger(), "WaypointEditor initialized");
 		}
 
-		// void TrajectoryRecoder::initializeParameter()
+		// void WaypointEditor::initializeParameter()
 		// {
 		// 	this->declare_parameter("frame_id_global", rclcpp::ParameterValue("map"));
 		// 	this->declare_parameter("marker_yaml_path", rclcpp::ParameterValue("interactive_markers.yaml"));
