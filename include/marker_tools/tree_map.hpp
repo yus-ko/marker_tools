@@ -19,36 +19,42 @@ namespace potbot_lib{
             T data;
         };
 
-        using VisualMarkerGraphNode = Node<VisualMarker*>;
+        using VisualMarkerTreeNode = Node<VisualMarker*>;
 
         class TreeMap : public InteractiveMarkerManager
         {
-            private:
+            protected:
 
-                rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr pub_edges_;
-                std::map<NodeId, VisualMarkerGraphNode> graph_;
+                rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_edges_;
+                std::map<NodeId, VisualMarkerTreeNode> graph_;
                 NodeId id_goal_node_, id_start_node_;
 
                 rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
                 rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters);
 
-                void markerFeedback(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
-                void addChild(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, const std::string child_name);
+                virtual void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
-                void initializeMenu();
-                void initializeMarker(std::string yaml_path = "");
+                virtual std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
-                void saveTreeMap(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, YAML::Node &marker_yaml);
+                virtual void initializeMenu() override;
+                virtual void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
+                virtual void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers) override;
+
+                virtual YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+
+                virtual void setStartNode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
+                virtual void setGoalNode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
 
                 std::vector<NodeId> breadthFirstSearch(const NodeId &start_id, const NodeId &goal_id);
 
-                void publishTreeMap(const std::map<NodeId, VisualMarkerGraphNode> &graph_map, const std::vector<NodeId> &path = {});
+                void publishTreeMap(const std::map<NodeId, VisualMarkerTreeNode> &graph_map, const std::vector<NodeId> &path = {});
 
             public:
                 TreeMap(std::string name="marker", std::string node_namespace="");
                 ~TreeMap(){};
 
-                VisualMarkerGraphNode getNode(NodeId id);
+                VisualMarkerTreeNode getNode(NodeId id);
         };
     }
 }

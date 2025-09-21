@@ -1,22 +1,24 @@
 import launch
-import launch.actions
-import launch_ros.actions
 from launch_ros.actions import LifecycleNode
+from os.path import expanduser
 
 def generate_launch_description():
     return launch.LaunchDescription([
-        # launch_ros.actions.LifecycleNode(
-        #     package='test_pkg',
-        #     executable='interactive_marker',
-        #     name='interactive_marker',
-        #     namespace='',
-        #     output='screen'
-        # ),
-        launch_ros.actions.Node(
+        LifecycleNode(
             package='marker_tools',
-            executable='interactive_marker',
-            name='interactive_marker',
-            namespace='imns',
-            output='screen'
-        )
+            executable='base_marker',
+            name='base_marker',
+            namespace='',
+            output='screen',
+            parameters=[
+                {"marker_yaml_path": expanduser("~")+"/potbot_ws/src/marker_tools/params/interactive_markers.yaml"}
+            ]
+        ),
+        # launch_ros.actions.Node(
+        #     package='marker_tools',
+        #     executable='base_marker',
+        #     name='base_marker',
+        #     namespace='imns',
+        #     output='screen'
+        # )
     ])

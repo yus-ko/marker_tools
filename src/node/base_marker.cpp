@@ -31,13 +31,13 @@ private:
 
 int main(int argc, char * argv[])
 {
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<MarkerNode>());
-    rclcpp::shutdown();
+    // rclcpp::init(argc, argv);
+    // rclcpp::spin(std::make_shared<MarkerNode>());
+    // rclcpp::shutdown();
 
     // rclcpp::init(argc, argv);
     // auto node_marker = std::make_shared<MarkerNode>();
-    // // auto node_imm = std::make_shared<potbot_lib::InteractiveMarkerManager>("yoimiya");
+    // // auto node_imm = std::make_shared<potbot_lib::InteractiveMarkerManager>("marker");
     // // ln->configure();
     // // ln->activate();
     // rclcpp::executors::SingleThreadedExecutor exe;
@@ -45,6 +45,13 @@ int main(int argc, char * argv[])
     // // exe.add_node(node_imm->get_node_base_interface());
     // exe.spin();
     // rclcpp::shutdown();
+
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<potbot_lib::InteractiveMarkerManager>("marker");
+    node->configure();
+    node->activate();
+    rclcpp::spin(node->get_node_base_interface());
+    rclcpp::shutdown();
 
     return 0;
 }

@@ -12,6 +12,7 @@ add_library(marker_tools
   src/trajectory_recoder.cpp
   src/waypoint_editor.cpp
   src/tree_map.cpp
+  src/graph_map.cpp
 )
 
 ament_target_dependencies(marker_tools
@@ -67,11 +68,21 @@ ament_target_dependencies(tree_map
 )
 target_link_libraries(tree_map marker_tools)
 
+add_executable(graph_map
+  src/node/graph_map.cpp
+)
+ament_target_dependencies(graph_map
+  rclcpp
+  potbot_ros
+)
+target_link_libraries(graph_map marker_tools)
+
 install(TARGETS
   base_marker
   trajectory_recoder
   waypoint_editor
   tree_map
+  graph_map
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
