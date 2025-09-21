@@ -29,9 +29,6 @@ namespace potbot_lib{
                 std::map<NodeId, VisualMarkerTreeNode> graph_;
                 NodeId id_goal_node_, id_start_node_;
 
-                rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
-                rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters);
-
                 virtual void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
                 virtual std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;

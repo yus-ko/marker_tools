@@ -1,0 +1,145 @@
+markers:
+  - name: marker
+    type: sphere
+    pose:
+      position:
+        x: 0.82246148586273193
+        y: 0.75995057821273804
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker
+    connections:
+      - marker_0
+  - name: marker_0
+    type: sphere
+    pose:
+      position:
+        x: 0.81557786464691162
+        y: 1.2506848573684692
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_0
+    connections:
+      - marker
+      - marker_1
+      - marker_3
+  - name: marker_1
+    type: sphere
+    pose:
+      position:
+        x: 0.81472468376159668
+        y: 1.7872804403305054
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_1
+    connections:
+      - marker_0
+      - marker_2
+      - marker_4
+  - name: marker_2
+    type: sphere
+    pose:
+      position:
+        x: 0.81899869441986084
+        y: 2.2446663379669189
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_2
+    connections:
+      - marker_1
+  - name: marker_3
+    type: sphere
+    pose:
+      position:
+        x: 1.218553900718689
+        y: 1.2509716749191284
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_3
+    connections:
+      - marker_0
+      - marker_4
+  - name: marker_4
+    type: sphere
+    pose:
+      position:
+        x: 1.2155667543411255
+        y: 1.7535682916641235
+        z: 0
+      rotation:
+        roll: 0
+        pitch: -0
+        yaw: 0
+    scale:
+      x: 0.050000000000000003
+      y: 0.050000000000000003
+      z: 0.050000000000000003
+    color:
+      r: 0.699999988
+      g: 0
+      b: 0
+      a: 1
+    id: marker_4
+    connections:
+      - marker_3
+      - marker_1

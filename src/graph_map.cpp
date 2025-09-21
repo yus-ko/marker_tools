@@ -7,252 +7,258 @@ namespace potbot_lib{
 
 		GraphMap::GraphMap(std::string name, std::string node_namespace) : TreeMap(name,node_namespace)
 		{
-			// fuction_duplicate_marker_ = 
-			// 	[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
-			// 		auto name = this->duplicateMarker(feedback);
-			// 		addChild(feedback, name);
-			// 	};
-			// fuction_save_marker_ = [this](
-			// 	const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
-			// 		auto yaml = this->saveMarker(feedback);
-			// 		saveGraphMap(feedback, yaml);
-			// 	};
-			
-			// function_change_position_ = [this](
-			// 	const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback){
-			// 		changePosition(feedback);
-			// 		markerFeedback(feedback);
-			// 	};
-			// function_change_rotation_ = [this](
-			// 	const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback){
-			// 		changeRotation(feedback);
-			// 		markerFeedback(feedback);
-			// 	};
-
-			// this->TreeMap::initialize();
-			
-			initializeMenu();
-			initializeMarker(this->get_parameter("marker_yaml_path").as_string());
-			
-			pub_edges_ = this->create_publisher<visualization_msgs::msg::Marker>("edges", 1);
-
-			// initializeMarker(this->get_parameter("marker_yaml_path").as_string());
-			// initializeMarkerServer(controllable_markers_);
-			
-			RCLCPP_INFO(this->get_logger(), "GraphMap initialized");
-			publishGraphMap(graph_);
 		}
-
-		// void GraphMap::initializeParameter()
-		// {
-		// 	this->declare_parameter("frame_id_global", rclcpp::ParameterValue("map"));
-		// 	this->declare_parameter("marker_yaml_path", rclcpp::ParameterValue("interactive_markers.yaml"));
-		// }
 
 		void GraphMap::initializeMenu()
 		{
+			TreeMap::initializeMenu();
 			auto graph_handle = menu_handler_->insert("graph");
 
 			menu_handler_->insert(graph_handle, "add edge",
 				[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
-					});
+					changeToConnectMode(feedback);});
+			
+			menu_handler_connect_ = std::make_shared<interactive_markers::MenuHandler>();
+			menu_handler_connect_->insert("connect",
+				[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
+					this->connectNode(connection_source_, feedback->marker_name);});
+
+			menu_handler_cancel_ = std::make_shared<interactive_markers::MenuHandler>();
+			menu_handler_cancel_->insert("cancel",
+				[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
+					// this->changeToNormalMode(feedback);
+					initializeMarkerServer(controllable_markers_);});
+
 		}
 
-		void GraphMap::initializeMarker(std::string yaml_path)
+		void GraphMap::changeToConnectMode(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
 		{
-			// try 
-			// {
-			// 	YAML::Node root = YAML::LoadFile(yaml_path);
-			// 	if (root["markers"]) 
-			// 	{
-			// 		for (const auto& node : root["markers"]) 
-			// 		{
-			// 			std::string name = node["name"].as<std::string>();
-			// 			graph_[name].id = node["id"].as<NodeId>();
-			// 			graph_[name].parent = node["parent"].as<NodeId>();
-			// 			graph_[name].children = node["children"].as<std::vector<NodeId>>();
-			// 			graph_[name].data = &(controllable_markers_[name]);
-			// 		}
-
-			// 		RCLCPP_INFO(this->get_logger(), "Loaded: %s", yaml_path.c_str());
-			// 	}
-			// } 
-			// catch (const std::exception& e) 
-			// {
-			// 	RCLCPP_INFO(this->get_logger(), "Failed to load marker yaml: %s", e.what());
-
-			// 	auto ini_node_name = controllable_markers_.begin()->first;
-
-			// 	VisualMarkerGraphNode node;
-			// 	// node.id = 0;
-			// 	node.id = ini_node_name;
-			// 	node.data = &(controllable_markers_.begin()->second);
-			// 	graph_[ini_node_name] = node;
-
-			// 	RCLCPP_INFO(this->get_logger(), "Set root to %s", ini_node_name.c_str());
-			// }
-		}
-
-		rcl_interfaces::msg::SetParametersResult GraphMap::dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters)
-		{
-			RCLCPP_INFO(this->get_logger(), "parameter changed");
-			auto results = std::make_shared<rcl_interfaces::msg::SetParametersResult>();
-			results->successful = true;
-
-			return *results;
-		}
-
-		void GraphMap::markerFeedback(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
-		{
-			// RCLCPP_INFO(this->get_logger(),"markerFeedback");
 			visualization_msgs::msg::InteractiveMarker int_marker;
 			if (imsrv_->get(feedback->marker_name, int_marker))
 			{
-				// breadthFirstSearch(id_start_node_, id_goal_node_);
-				// auto path = breadthFirstSearch("marker", "marker_3");
-				// publishGraphMap(graph_, path);
+				for (const auto &cm:controllable_markers_)
+				{
+					if (cm.first == int_marker.name)
+					{
+						menu_handler_cancel_->apply(*imsrv_, cm.first);
+					}
+					else
+					{
+						menu_handler_connect_->apply(*imsrv_, cm.first);
+					}
+				}
+				imsrv_->applyChanges();
+				connection_source_ = graph_[int_marker.name].id;
 			}
 		}
 
-		// std::vector<NodeId> GraphMap::breadthFirstSearch(const NodeId &start_id, const NodeId &goal_id)
-		// {
-		// 	std::vector<NodeId> checked_ids;
-		// 	std::queue<NodeId> tmp_queue;
+		void GraphMap::changeToNormalMode(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
+		{
+			visualization_msgs::msg::InteractiveMarker int_marker;
+			if (imsrv_->get(feedback->marker_name, int_marker))
+			{
+				initializeMarkerServer(controllable_markers_);
+			}
+		}
 
-		// 	if (!utility::contains(start_id, graph_))
-		// 	{
-		// 		RCLCPP_WARN(this->get_logger(), "Please set start node");
-		// 		return checked_ids;
-		// 	}
+		void GraphMap::connectNode(const NodeId &source, const NodeId &target)
+		{
+			if (utility::contains(source, graph_) && utility::contains(target, graph_))
+			{
+				graph_[source].connections.push_back(target);
+				graph_[target].connections.push_back(source);
+				RCLCPP_INFO(this->get_logger(), "Node conected: %s <-> %s",
+					graph_[source].id.c_str(), graph_[target].id.c_str());
+				initializeMarkerServer(controllable_markers_);
+			}
+		}
 
-		// 	if (!utility::contains(goal_id, graph_))
-		// 	{
-		// 		RCLCPP_WARN(this->get_logger(), "Please set goal node");
-		// 		return checked_ids;
-		// 	}
+		void GraphMap::initializeMarker(std::string yaml_path, bool set_default)
+		{
+			InteractiveMarkerManager::initializeMarker(yaml_path, set_default);
 
-		// 	tmp_queue.push(start_id);
+			try 
+			{
+				YAML::Node root = YAML::LoadFile(yaml_path);
+				if (root["markers"]) 
+				{
+					for (const auto& node : root["markers"]) 
+					{
+						std::string name = node["name"].as<std::string>();
+						graph_[name].id = node["id"].as<NodeId>();
+						graph_[name].connections = node["connections"].as<std::vector<NodeId>>();
+						graph_[name].data = &(controllable_markers_[name]);
+					}
 
-		// 	while (!tmp_queue.empty())
-		// 	{
-		// 		NodeId current = tmp_queue.front(); tmp_queue.pop();
-		// 		checked_ids.push_back(current);
-		// 		if (current == goal_id)
-		// 			break;
-		// 		std::vector<NodeId> neighbors = graph_[current].children;
-		// 		for (const auto &neighbor : neighbors) 
-		// 		{
-		// 			if (!utility::contains(neighbor, checked_ids))
-		// 			{
-		// 				tmp_queue.push(neighbor);
-		// 			}
-		// 		}
-		// 	}
+					RCLCPP_INFO(this->get_logger(), "Graph map loaded: %s", yaml_path.c_str());
+				}
+			} 
+			catch (const std::exception& e) 
+			{
+				RCLCPP_INFO(this->get_logger(), "Failed to graph map load marker yaml: %s", e.what());
 
-		// 	// 経路復元
-		// 	std::vector<NodeId> path;
-		// 	path.push_back(goal_id);
-		// 	NodeId id = graph_[goal_id].parent;
-		// 	while (id != start_id)
-		// 	{
-		// 		path.push_back(id);
-		// 		id = graph_[id].parent;
-		// 	}
-		// 	path.push_back(start_id);
-		// 	std::reverse(path.begin(), path.end());
+				auto ini_node_name = controllable_markers_.begin()->first;
 
-		// 	return path;
+				VisualMarkerGraphNode node;
+				// node.id = 0;
+				node.id = ini_node_name;
+				node.data = &(controllable_markers_.begin()->second);
+				graph_[ini_node_name] = node;
 
-		// }
+				RCLCPP_INFO(this->get_logger(), "Set root to %s", ini_node_name.c_str());
+			}
+		}
 
-		// void GraphMap::addChild(
-		// 	const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, const std::string child_name)
-		// {
-		// 	visualization_msgs::msg::InteractiveMarker int_marker;
-		// 	if (imsrv_->get(feedback->marker_name, int_marker))
-		// 	{
-		// 		auto parent_name = int_marker.name;
-		// 		RCLCPP_DEBUG(this->get_logger(), "parent: %s, child: %s", parent_name.c_str(), child_name.c_str());
+		void GraphMap::initializeMarkerServer(const std::map<std::string, VisualMarker> &markers)
+		{
+			InteractiveMarkerManager::initializeMarkerServer(markers);
+			publishGraphMap(graph_);
+		}
 
-		// 		auto &parent_node = graph_[parent_name];
+		void GraphMap::changePosition(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
+		{
+			InteractiveMarkerManager::changePosition(feedback);
+			
+			visualization_msgs::msg::InteractiveMarker int_marker;
+			if (imsrv_->get(feedback->marker_name, int_marker))
+			{
+				if (utility::contains(id_start_node_, graph_) &&
+					utility::contains(id_goal_node_, graph_) &&
+					id_start_node_ != id_goal_node_)
+				{
+					publishGraphMap(graph_);
+				}
+				else
+				{
+					publishGraphMap(graph_);
+				}
+			}
+		}
+
+		YAML::Node GraphMap::saveMarker(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
+		{
+			auto base_yaml = InteractiveMarkerManager::saveMarker(feedback);
+			
+			visualization_msgs::msg::InteractiveMarker int_marker;
+			if (imsrv_->get(feedback->marker_name, int_marker))
+			{
+				for (int i = 0; i < base_yaml["markers"].size(); i++) 
+				{
+					std::string name = base_yaml["markers"][i]["name"].as<std::string>();
+
+					auto graph_node = graph_[name];
+
+					base_yaml["markers"][i]["id"] = graph_node.id;
+					base_yaml["markers"][i]["connections"] = graph_node.connections;
+				}
+
+				std::string yaml_path = marker_file_;
+				try {
+					std::ofstream ofs(yaml_path);
+					ofs << base_yaml;
+					ofs.close();
+					RCLCPP_INFO(this->get_logger(), "Saved graph map to %s", yaml_path.c_str());
+				} catch (const std::exception& e) {
+					RCLCPP_ERROR(this->get_logger(), "Failed to write yaml: %s", e.what());
+				}
+			}
+
+			return base_yaml;
+		}
+
+		std::string GraphMap::duplicateMarker(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
+		{
+			auto child_name = InteractiveMarkerManager::duplicateMarker(feedback);
+
+			visualization_msgs::msg::InteractiveMarker int_marker;
+			if (imsrv_->get(feedback->marker_name, int_marker))
+			{
+				auto parent_name = int_marker.name;
+
+				auto &parent_node = graph_[parent_name];
 				
-		// 		VisualMarkerGraphNode node;
-		// 		// node.id = graph_.size();
-		// 		node.id = child_name;
-		// 		node.parent = parent_node.id;
-		// 		node.data = &(controllable_markers_[child_name]);
+				VisualMarkerGraphNode node;
+				node.id = child_name;
+				node.data = &(controllable_markers_[child_name]);
+				node.connections.push_back(parent_name);
+				parent_node.connections.push_back(node.id);
+				
+				graph_[child_name] = node;
 
-		// 		parent_node.children.push_back(node.id);
-		// 		graph_[child_name] = node;
+				publishGraphMap(graph_);
+			}
 
-		// 		publishGraphMap(graph_);
-		// 	}
-		// }
+			return child_name;
+		}
 
-		// void GraphMap::saveGraphMap(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, YAML::Node &marker_yaml)
-		// {
-		// 	visualization_msgs::msg::InteractiveMarker int_marker;
-		// 	if (imsrv_->get(feedback->marker_name, int_marker))
-		// 	{
-		// 		for (int i = 0; i < marker_yaml["markers"].size(); i++) 
-		// 		{
-		// 			std::string name = marker_yaml["markers"][i]["name"].as<std::string>();
+		void GraphMap::deleteMarker(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
+		{
+			InteractiveMarkerManager::deleteMarker(feedback);
 
-		// 			auto graph_node = graph_[name];
+			auto node_name = feedback->marker_name;
 
-		// 			marker_yaml["markers"][i]["id"] = graph_node.id;
-		// 			marker_yaml["markers"][i]["parent"] = graph_node.parent;
-		// 			marker_yaml["markers"][i]["children"] = graph_node.children;
-		// 			// for (const auto id:graph_node.parent)
-		// 			// 	marker_yaml["markers"][i]["parent"].push_back(id);
-		// 			// for (const auto id:graph_node.children)
-		// 			// 	marker_yaml["markers"][i]["children"].push_back(id);
-		// 		}
+			for (const auto &node:graph_[node_name].connections)
+			{
+				auto it = std::find(graph_[node].connections.begin(), 
+									graph_[node].connections.end(),
+									node_name);
+				graph_[node].connections.erase(it);
+			}	
 
-		// 		std::string yaml_path = this->get_parameter("marker_yaml_path").as_string();
-		// 		try {
-		// 			std::ofstream ofs(yaml_path);
-		// 			ofs << marker_yaml;
-		// 			ofs.close();
-		// 			RCLCPP_INFO(this->get_logger(), "Saved graph map to %s", yaml_path.c_str());
-		// 		} catch (const std::exception& e) {
-		// 			RCLCPP_ERROR(this->get_logger(), "Failed to write yaml: %s", e.what());
-		// 		}
-		// 	}
-		// }
+			graph_.erase(node_name);
+
+			publishGraphMap(graph_);
+		}
 
 		void GraphMap::publishGraphMap(const std::map<NodeId, VisualMarkerGraphNode> &graph_map, const std::vector<NodeId> &path)
 		{
-		// 	visualization_msgs::msg::Marker edges_msg;
-		// 	edges_msg.header.frame_id = frame_id_global_;
-		// 	edges_msg.header.stamp = this->get_clock()->now();
-		// 	edges_msg.id = 0;
-		// 	edges_msg.pose = utility::get_pose(0,0,0,0,0,0);
-		// 	edges_msg.type = visualization_msgs::msg::Marker::LINE_LIST;
-		// 	edges_msg.scale.x = 0.01;
-		// 	// edges_msg.color = color::get_msg("green");
+			visualization_msgs::msg::MarkerArray edges_msg_array;
 
-		// 	for (const auto &node:graph_)
-		// 	{
-		// 		for (const auto id:node.second.children)
-		// 		{
-		// 			edges_msg.points.push_back(node.second.data->marker.pose.position);
-		// 			edges_msg.points.push_back(getNode(id).data->marker.pose.position);
+			visualization_msgs::msg::Marker edges_msg;
+			edges_msg.header.frame_id = frame_id_global_;
+			edges_msg.header.stamp = this->get_clock()->now();
+			edges_msg.id = 0;
+			edges_msg.ns = "edge";
+			edges_msg.pose = utility::get_pose(0,0,0,0,0,0);
+			edges_msg.type = visualization_msgs::msg::Marker::LINE_LIST;
+			edges_msg.scale.x = 0.01;
+			edges_msg.color = color::get_msg("green");
 
-		// 			if (utility::contains(id, path))
-		// 			{
-		// 				edges_msg.colors.push_back(color::get_msg("blue"));
-		// 				edges_msg.colors.push_back(color::get_msg("blue"));
-		// 			}
-		// 			else
-		// 			{
-		// 				edges_msg.colors.push_back(color::get_msg("green"));
-		// 				edges_msg.colors.push_back(color::get_msg("green"));
-		// 			}
-		// 		}
-		// 	}
+			for (const auto &node:graph_)
+			{
+				for (const auto id:node.second.connections)
+				{
+					edges_msg.points.push_back(node.second.data->marker.pose.position);
+					edges_msg.points.push_back(getNode(id).data->marker.pose.position);
+				}
+			}
+			edges_msg_array.markers.push_back(edges_msg);
 
-		// 	pub_edges_->publish(edges_msg);
+			visualization_msgs::msg::Marker path_msg = edges_msg;
+			path_msg.id = 1;
+			path_msg.ns = "path";
+			path_msg.action = visualization_msgs::msg::Marker::DELETE;
+			path_msg.points.clear();
+			if (!path.empty())
+			{
+				path_msg.action = visualization_msgs::msg::Marker::MODIFY;
+				path_msg.color = color::get_msg("blue");
+				// path_msg.scale.x = 0.02;
+				for (int i = 0; i < path.size()-1; i++)
+				{
+					path_msg.points.push_back(graph_[path[i]].data->marker.pose.position);
+					path_msg.points.push_back(graph_[path[i+1]].data->marker.pose.position);
+				}
+			}
+			edges_msg_array.markers.push_back(path_msg);
+
+			pub_edges_->publish(edges_msg_array);
 		}
 
 		VisualMarkerGraphNode GraphMap::getNode(NodeId id)

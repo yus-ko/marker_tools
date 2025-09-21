@@ -10,12 +10,6 @@ namespace potbot_lib{
 			pub_edges_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("edges", 1);
 		}
 
-		// void TreeMap::initializeParameter()
-		// {
-		// 	this->declare_parameter("frame_id_global", rclcpp::ParameterValue("map"));
-		// 	this->declare_parameter("marker_yaml_path", rclcpp::ParameterValue("interactive_markers.yaml"));
-		// }
-
 		void TreeMap::initializeMenu()
 		{
 			InteractiveMarkerManager::initializeMenu();
@@ -72,15 +66,6 @@ namespace potbot_lib{
 		{
 			InteractiveMarkerManager::initializeMarkerServer(markers);
 			publishTreeMap(graph_);
-		}
-
-		rcl_interfaces::msg::SetParametersResult TreeMap::dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters)
-		{
-			RCLCPP_INFO(this->get_logger(), "parameter changed");
-			auto results = std::make_shared<rcl_interfaces::msg::SetParametersResult>();
-			results->successful = true;
-
-			return *results;
 		}
 
 		void TreeMap::changePosition(
@@ -243,7 +228,7 @@ namespace potbot_lib{
 
 			graph_.erase(node_name);
 
-			publishTreeMap(graph_);	
+			publishTreeMap(graph_);
 		}
 
 		YAML::Node TreeMap::saveMarker(
@@ -269,7 +254,7 @@ namespace potbot_lib{
 					// 	marker_yaml["markers"][i]["children"].push_back(id);
 				}
 
-				std::string yaml_path = this->get_parameter("marker_yaml_path").as_string();
+				std::string yaml_path = marker_file_;
 				try {
 					std::ofstream ofs(yaml_path);
 					ofs << base_yaml;

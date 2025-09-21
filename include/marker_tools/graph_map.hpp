@@ -23,23 +23,27 @@ namespace potbot_lib{
         class GraphMap : public TreeMap
         {
             private:
-
-                rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr pub_edges_;
+                std::shared_ptr<interactive_markers::MenuHandler>
+                    menu_handler_connect_, 
+                    menu_handler_cancel_;
                 std::map<NodeId, VisualMarkerGraphNode> graph_;
-                NodeId id_goal_node_, id_start_node_;
 
-                rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
-                rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters);
+                NodeId connection_source_;
 
-                void markerFeedback(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
-                // void addChild(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, const std::string child_name);
 
-                void initializeMenu();
-                void initializeMarker(std::string yaml_path = "");
+                void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
-                // void saveGraphMap(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, YAML::Node &marker_yaml);
+                void initializeMenu() override;
+                void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
+                void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers) override;
 
-                // std::vector<NodeId> breadthFirstSearch(const NodeId &start_id, const NodeId &goal_id);
+                YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+
+                void changeToConnectMode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
+                void changeToNormalMode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
+                void connectNode(const NodeId &source, const NodeId &target);
 
                 void publishGraphMap(const std::map<NodeId, VisualMarkerGraphNode> &graph_map, const std::vector<NodeId> &path = {});
 

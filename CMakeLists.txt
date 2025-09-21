@@ -32,49 +32,23 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-add_executable(base_marker
-  src/node/base_marker.cpp
-)
-ament_target_dependencies(base_marker
-  rclcpp
-  nav2_util
-  potbot_ros
-)
+add_executable(base_marker src/node/base_marker.cpp)
+ament_target_dependencies(base_marker rclcpp nav2_util potbot_ros)
 
-add_executable(trajectory_recoder
-  src/node/trajectory_recoder.cpp
-)
-ament_target_dependencies(trajectory_recoder
-  rclcpp
-  potbot_ros
-)
+add_executable(trajectory_recoder src/node/trajectory_recoder.cpp)
+ament_target_dependencies(trajectory_recoder rclcpp potbot_ros)
 target_link_libraries(trajectory_recoder marker_tools)
 
-add_executable(waypoint_editor
-  src/node/waypoint_editor.cpp
-)
-ament_target_dependencies(waypoint_editor
-  rclcpp
-  potbot_ros
-)
+add_executable(waypoint_editor src/node/waypoint_editor.cpp)
+ament_target_dependencies(waypoint_editor rclcpp potbot_ros)
 target_link_libraries(waypoint_editor marker_tools)
 
-add_executable(tree_map
-  src/node/tree_map.cpp
-)
-ament_target_dependencies(tree_map
-  rclcpp
-  potbot_ros
-)
+add_executable(tree_map src/node/tree_map.cpp)
+ament_target_dependencies(tree_map rclcpp potbot_ros)
 target_link_libraries(tree_map marker_tools)
 
-add_executable(graph_map
-  src/node/graph_map.cpp
-)
-ament_target_dependencies(graph_map
-  rclcpp
-  potbot_ros
-)
+add_executable(graph_map src/node/graph_map.cpp)
+ament_target_dependencies(graph_map rclcpp potbot_ros)
 target_link_libraries(graph_map marker_tools)
 
 install(TARGETS
