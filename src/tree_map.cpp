@@ -37,10 +37,10 @@ namespace potbot_lib{
 					for (const auto& node : root["markers"]) 
 					{
 						std::string name = node["name"].as<std::string>();
-						graph_[name].id = node["id"].as<NodeId>();
-						graph_[name].parent = node["parent"].as<NodeId>();
-						graph_[name].children = node["children"].as<std::vector<NodeId>>();
-						graph_[name].data = &(controllable_markers_[name]);
+						tree_[name].id = node["id"].as<NodeId>();
+						tree_[name].parent = node["parent"].as<NodeId>();
+						tree_[name].children = node["children"].as<std::vector<NodeId>>();
+						tree_[name].data = &(controllable_markers_[name]);
 					}
 
 					RCLCPP_INFO(this->get_logger(), "Tree map loaded: %s", yaml_path.c_str());
@@ -56,7 +56,7 @@ namespace potbot_lib{
 				// node.id = 0;
 				node.id = ini_node_name;
 				node.data = &(controllable_markers_.begin()->second);
-				graph_[ini_node_name] = node;
+				tree_[ini_node_name] = node;
 
 				RCLCPP_INFO(this->get_logger(), "Set root to %s", ini_node_name.c_str());
 			}
@@ -65,7 +65,7 @@ namespace potbot_lib{
 		void TreeMap::initializeMarkerServer(const std::map<std::string, VisualMarker> &markers)
 		{
 			InteractiveMarkerManager::initializeMarkerServer(markers);
-			publishTreeMap(graph_);
+			publishTreeMap(tree_);
 		}
 
 		void TreeMap::changePosition(
@@ -76,16 +76,16 @@ namespace potbot_lib{
 			visualization_msgs::msg::InteractiveMarker int_marker;
 			if (imsrv_->get(feedback->marker_name, int_marker))
 			{
-				if (utility::contains(id_start_node_, graph_) &&
-					utility::contains(id_goal_node_, graph_) &&
+				if (utility::contains(id_start_node_, tree_) &&
+					utility::contains(id_goal_node_, tree_) &&
 					id_start_node_ != id_goal_node_)
 				{
 					auto path = breadthFirstSearch(id_start_node_, id_goal_node_);
-					publishTreeMap(graph_, path);
+					publishTreeMap(tree_, path);
 				}
 				else
 				{
-					publishTreeMap(graph_);
+					publishTreeMap(tree_);
 				}
 			}
 		}
@@ -96,15 +96,15 @@ namespace potbot_lib{
 			visualization_msgs::msg::InteractiveMarker int_marker;
 			if (imsrv_->get(feedback->marker_name, int_marker))
 			{
-				id_start_node_ = graph_[int_marker.name].id;
-				// for (auto &node:graph_)
+				id_start_node_ = tree_[int_marker.name].id;
+				// for (auto &node:tree_)
 				// 	if (node.first != id_goal_node_)
 				// 		node.second.data->marker.controls.front().markers.front().color
 				// 			= color::get_msg("red");
-				// graph_[id_start_node_].data->marker.controls.front().markers.front().color
+				// tree_[id_start_node_].data->marker.controls.front().markers.front().color
 				// 	 = color::get_msg("green");
 				// initializeMarkerServer(controllable_markers_);
-				RCLCPP_INFO(this->get_logger(), "Set start node: %s", int_marker.name.c_str());
+				RCLCPP_INFO(this->get_logger(), "Set start node: %s", id_start_node_.c_str());
 			}
 		}
 
@@ -114,15 +114,15 @@ namespace potbot_lib{
 			visualization_msgs::msg::InteractiveMarker int_marker;
 			if (imsrv_->get(feedback->marker_name, int_marker))
 			{
-				id_goal_node_ = graph_[int_marker.name].id;
-				// for (auto &node:graph_)
+				id_goal_node_ = tree_[int_marker.name].id;
+				// for (auto &node:tree_)
 				// 	if (node.first != id_start_node_)
 				// 		node.second.data->marker.controls.front().markers.front().color
 				// 			= color::get_msg("red");
-				// graph_[id_goal_node_].data->marker.controls.front().markers.front().color
+				// tree_[id_goal_node_].data->marker.controls.front().markers.front().color
 				// 	 = color::get_msg("blue");
-				initializeMarkerServer(controllable_markers_);
-				RCLCPP_INFO(this->get_logger(), "Set goal node: %s", int_marker.name.c_str());
+				// initializeMarkerServer(controllable_markers_);
+				RCLCPP_INFO(this->get_logger(), "Set goal node: %s", id_goal_node_.c_str());
 			}
 		}
 
@@ -132,13 +132,13 @@ namespace potbot_lib{
 			std::vector<NodeId> path;
 			std::queue<NodeId> tmp_queue;
 
-			if (!utility::contains(start_id, graph_))
+			if (!utility::contains(start_id, tree_))
 			{
 				RCLCPP_WARN(this->get_logger(), "Please set start node");
 				return path;
 			}
 
-			if (!utility::contains(goal_id, graph_))
+			if (!utility::contains(goal_id, tree_))
 			{
 				RCLCPP_WARN(this->get_logger(), "Please set goal node");
 				return path;
@@ -153,8 +153,8 @@ namespace potbot_lib{
 				if (current == goal_id)
 					break;
 
-				std::vector<NodeId> neighbors = graph_[current].children;
-				neighbors.push_back(graph_[current].parent);
+				std::vector<NodeId> neighbors = tree_[current].children;
+				neighbors.push_back(tree_[current].parent);
 				for (const auto &neighbor : neighbors) 
 				{
 					if (!utility::contains(neighbor, checked_ids))
@@ -188,18 +188,18 @@ namespace potbot_lib{
 				auto parent_name = int_marker.name;
 				RCLCPP_DEBUG(this->get_logger(), "parent: %s, child: %s", parent_name.c_str(), child_name.c_str());
 
-				auto &parent_node = graph_[parent_name];
+				auto &parent_node = tree_[parent_name];
 				
 				VisualMarkerTreeNode node;
-				// node.id = graph_.size();
+				// node.id = tree_.size();
 				node.id = child_name;
 				node.parent = parent_node.id;
 				node.data = &(controllable_markers_[child_name]);
 
 				parent_node.children.push_back(node.id);
-				graph_[child_name] = node;
+				tree_[child_name] = node;
 
-				publishTreeMap(graph_);
+				publishTreeMap(tree_);
 			}
 
 			return child_name;
@@ -211,24 +211,24 @@ namespace potbot_lib{
 			InteractiveMarkerManager::deleteMarker(feedback);
 
 			auto node_name = feedback->marker_name;
-			auto parent_name = graph_[node_name].parent;
+			auto parent_name = tree_[node_name].parent;
 
-			for (auto &child_name:graph_[node_name].children)
-				graph_[child_name].parent = parent_name;
+			for (auto &child_name:tree_[node_name].children)
+				tree_[child_name].parent = parent_name;
 
-			auto it = std::find(	graph_[parent_name].children.begin(), 
-									graph_[parent_name].children.end(),
+			auto it = std::find(	tree_[parent_name].children.begin(), 
+									tree_[parent_name].children.end(),
 									node_name);
-			graph_[parent_name].children.erase(it);
+			tree_[parent_name].children.erase(it);
 			
-			graph_[parent_name].children.insert(
-				graph_[parent_name].children.end(),
-				graph_[node_name].children.begin(),
-				graph_[node_name].children.end());
+			tree_[parent_name].children.insert(
+				tree_[parent_name].children.end(),
+				tree_[node_name].children.begin(),
+				tree_[node_name].children.end());
 
-			graph_.erase(node_name);
+			tree_.erase(node_name);
 
-			publishTreeMap(graph_);
+			publishTreeMap(tree_);
 		}
 
 		YAML::Node TreeMap::saveMarker(
@@ -243,14 +243,14 @@ namespace potbot_lib{
 				{
 					std::string name = base_yaml["markers"][i]["name"].as<std::string>();
 
-					auto graph_node = graph_[name];
+					auto tree_node = tree_[name];
 
-					base_yaml["markers"][i]["id"] = graph_node.id;
-					base_yaml["markers"][i]["parent"] = graph_node.parent;
-					base_yaml["markers"][i]["children"] = graph_node.children;
-					// for (const auto id:graph_node.parent)
+					base_yaml["markers"][i]["id"] = tree_node.id;
+					base_yaml["markers"][i]["parent"] = tree_node.parent;
+					base_yaml["markers"][i]["children"] = tree_node.children;
+					// for (const auto id:tree_node.parent)
 					// 	marker_yaml["markers"][i]["parent"].push_back(id);
-					// for (const auto id:graph_node.children)
+					// for (const auto id:tree_node.children)
 					// 	marker_yaml["markers"][i]["children"].push_back(id);
 				}
 
@@ -270,7 +270,7 @@ namespace potbot_lib{
 		}
 
 		void TreeMap::publishTreeMap(
-			const std::map<NodeId, VisualMarkerTreeNode> &graph_map, const std::vector<NodeId> &path)
+			const std::map<NodeId, VisualMarkerTreeNode> &tree_map, const std::vector<NodeId> &path)
 		{
 			visualization_msgs::msg::MarkerArray edges_msg_array;
 
@@ -284,7 +284,7 @@ namespace potbot_lib{
 			edges_msg.scale.x = 0.01;
 			edges_msg.color = color::get_msg("green");
 
-			for (const auto &node:graph_)
+			for (const auto &node:tree_)
 			{
 				for (const auto id:node.second.children)
 				{
@@ -306,8 +306,8 @@ namespace potbot_lib{
 				// path_msg.scale.x = 0.02;
 				for (int i = 0; i < path.size()-1; i++)
 				{
-					path_msg.points.push_back(graph_[path[i]].data->marker.pose.position);
-					path_msg.points.push_back(graph_[path[i+1]].data->marker.pose.position);
+					path_msg.points.push_back(tree_[path[i]].data->marker.pose.position);
+					path_msg.points.push_back(tree_[path[i+1]].data->marker.pose.position);
 				}
 			}
 			edges_msg_array.markers.push_back(path_msg);
@@ -317,7 +317,7 @@ namespace potbot_lib{
 
 		VisualMarkerTreeNode TreeMap::getNode(NodeId id)
 		{
-			for (const auto &node:graph_)
+			for (const auto &node:tree_)
 			{
 				if (node.second.id == id)
 				{

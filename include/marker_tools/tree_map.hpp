@@ -26,7 +26,7 @@ namespace potbot_lib{
             protected:
 
                 rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_edges_;
-                std::map<NodeId, VisualMarkerTreeNode> graph_;
+                std::map<NodeId, VisualMarkerTreeNode> tree_;
                 NodeId id_goal_node_, id_start_node_;
 
                 virtual void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
@@ -45,11 +45,14 @@ namespace potbot_lib{
 
                 std::vector<NodeId> breadthFirstSearch(const NodeId &start_id, const NodeId &goal_id);
 
-                void publishTreeMap(const std::map<NodeId, VisualMarkerTreeNode> &graph_map, const std::vector<NodeId> &path = {});
+                void publishTreeMap(const std::map<NodeId, VisualMarkerTreeNode> &tree_map, const std::vector<NodeId> &path = {});
 
             public:
                 TreeMap(std::string name="marker", std::string node_namespace="");
                 ~TreeMap(){};
+
+                // NodeId getStartNodeId() { return id_start_node_; };
+                // NodeId getGoalNodeId() { return id_goal_node_; };
 
                 VisualMarkerTreeNode getNode(NodeId id);
         };

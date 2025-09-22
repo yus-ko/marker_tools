@@ -8,8 +8,6 @@
 
 namespace potbot_lib{
     namespace marker_tools{
-        
-        using NodeId = std::string;
 
         template <typename T>
         struct GraphNode{
@@ -30,7 +28,6 @@ namespace potbot_lib{
 
                 NodeId connection_source_;
 
-
                 void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
                 void initializeMenu() override;
@@ -41,9 +38,14 @@ namespace potbot_lib{
                 std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
                 void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
+                void setStartNode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                void setGoalNode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+
                 void changeToConnectMode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
                 void changeToNormalMode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
                 void connectNode(const NodeId &source, const NodeId &target);
+
+                std::vector<NodeId> getPath(const NodeId &start, const NodeId &goal);
 
                 void publishGraphMap(const std::map<NodeId, VisualMarkerGraphNode> &graph_map, const std::vector<NodeId> &path = {});
 

@@ -129,12 +129,36 @@ namespace potbot_lib{
 					utility::contains(id_goal_node_, graph_) &&
 					id_start_node_ != id_goal_node_)
 				{
-					publishGraphMap(graph_);
+					publishGraphMap(graph_, getPath(id_start_node_, id_goal_node_));
 				}
 				else
 				{
 					publishGraphMap(graph_);
 				}
+			}
+		}
+
+		void GraphMap::setStartNode(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
+		{
+			visualization_msgs::msg::InteractiveMarker int_marker;
+			if (imsrv_->get(feedback->marker_name, int_marker))
+			{
+				id_start_node_ = graph_[int_marker.name].id;
+				RCLCPP_INFO(this->get_logger(), "Set start node: %s", id_start_node_.c_str());
+				changePosition(feedback);
+			}
+		}
+
+		void GraphMap::setGoalNode(
+			const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
+		{
+			visualization_msgs::msg::InteractiveMarker int_marker;
+			if (imsrv_->get(feedback->marker_name, int_marker))
+			{
+				id_goal_node_ = graph_[int_marker.name].id;
+				RCLCPP_INFO(this->get_logger(), "Set goal node: %s", id_goal_node_.c_str());
+				changePosition(feedback);
 			}
 		}
 
@@ -214,6 +238,85 @@ namespace potbot_lib{
 			graph_.erase(node_name);
 
 			publishGraphMap(graph_);
+		}
+
+		std::vector<NodeId> GraphMap::getPath(const NodeId &start, const NodeId &goal)
+		{
+
+			std::vector<NodeId> path;
+			if (!utility::contains(start, graph_)) {
+				RCLCPP_WARN(this->get_logger(), "Please set start node");
+				return path;
+			}
+			if (!utility::contains(goal, graph_)) {
+				RCLCPP_WARN(this->get_logger(), "Please set goal node");
+				return path;
+			}
+
+			std::map<NodeId, double> cost;
+			std::map<NodeId, NodeId> parent;
+			std::map<NodeId, bool> visited;
+			for (const auto &g : graph_) 
+			{
+				cost[g.second.id] = std::numeric_limits<double>::infinity();
+				visited[g.second.id] = false;
+			}
+			cost[start] = 0;
+			parent[start] = start;
+
+			while (true) 
+			{
+				// 未訪問かつコスト最小のノードを選択
+				NodeId current;
+				double min_cost = std::numeric_limits<double>::infinity();
+				bool found = false;
+				for (const auto &kv : cost) 
+				{
+					if (!visited[kv.first] && kv.second < min_cost) 
+					{
+						min_cost = kv.second;
+						current = kv.first;
+						found = true;
+					}
+				}
+				if (!found) 
+					break; // 到達不能
+				if (current == goal) 
+					break; // ゴール到達
+				visited[current] = true;
+
+				auto &current_node = graph_[current];
+				for (const auto &conn : current_node.connections) 
+				{
+					if (!visited[conn]) 
+					{
+						double dist = (utility::get_point(current_node.data->marker.pose.position) -
+									   utility::get_point(graph_[conn].data->marker.pose.position)).norm();
+						double new_cost = cost[current] + dist;
+						if (new_cost < cost[conn]) 
+						{
+							cost[conn] = new_cost;
+							parent[conn] = current;
+						}
+					}
+				}
+			}
+
+			// 経路復元
+			if (!parent.count(goal)) 
+			{
+				RCLCPP_WARN(this->get_logger(), "Path not found");
+				return path;
+			}
+			NodeId current = goal;
+			while (current != start) 
+			{
+				path.push_back(current);
+				current = parent[current];
+			}
+			path.push_back(start);
+			std::reverse(path.begin(), path.end());
+			return path;
 		}
 
 		void GraphMap::publishGraphMap(const std::map<NodeId, VisualMarkerGraphNode> &graph_map, const std::vector<NodeId> &path)
