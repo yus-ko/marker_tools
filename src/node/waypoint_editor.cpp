@@ -4,8 +4,10 @@
 int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(
-        potbot_lib::marker_tools::WaypointEditor("waypoint").get_node_base_interface());
+    auto node = potbot_lib::marker_tools::WaypointEditor("waypoint");
+    node.configure();
+    node.activate();
+    rclcpp::spin(node.get_node_base_interface());
     rclcpp::shutdown();
     return 0;
 }

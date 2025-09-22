@@ -12,23 +12,22 @@ namespace potbot_lib{
             private:
 
                 rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_waypoints_;
-                std::vector<VisualMarker> waypoints_;
+                std::vector<VisualMarker*> waypoints_;
 
-                rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
-                rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters);
+                void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
 
-                void markerFeedback(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
-
-                void initializeMenu();
-                void initializeMarker();
+                void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
                 std::vector<potbot_lib::Pose> interpolatePath(const std::vector<potbot_lib::Pose>& trajectory);
+
+                void publishWaypointPath(const std::vector<VisualMarker*> &waypoints);
 
             public:
                 WaypointEditor(std::string name="marker", std::string node_namespace="");
                 ~WaypointEditor(){};
-
-                std::vector<VisualMarker>* getVisualMarker();
         };
     }
 }

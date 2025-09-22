@@ -14,7 +14,7 @@ namespace potbot_lib{
         template <typename T>
         struct GraphNode{
             NodeId id;
-            std::vector<NodeId> connections;
+            std::set<NodeId> connections;
             T data;
         };
 

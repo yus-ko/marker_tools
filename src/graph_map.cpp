@@ -67,8 +67,8 @@ namespace potbot_lib{
 		{
 			if (utility::contains(source, graph_) && utility::contains(target, graph_))
 			{
-				graph_[source].connections.push_back(target);
-				graph_[target].connections.push_back(source);
+				graph_[source].connections.insert(target);
+				graph_[target].connections.insert(source);
 				RCLCPP_INFO(this->get_logger(), "Node conected: %s <-> %s",
 					graph_[source].id.c_str(), graph_[target].id.c_str());
 				initializeMarkerServer(controllable_markers_);
@@ -88,7 +88,8 @@ namespace potbot_lib{
 					{
 						std::string name = node["name"].as<std::string>();
 						graph_[name].id = node["id"].as<NodeId>();
-						graph_[name].connections = node["connections"].as<std::vector<NodeId>>();
+						auto vec = node["connections"].as<std::vector<NodeId>>();
+						graph_[name].connections = std::set(vec.begin(), vec.end());
 						graph_[name].data = &(controllable_markers_[name]);
 					}
 
@@ -153,7 +154,7 @@ namespace potbot_lib{
 					auto graph_node = graph_[name];
 
 					base_yaml["markers"][i]["id"] = graph_node.id;
-					base_yaml["markers"][i]["connections"] = graph_node.connections;
+					base_yaml["markers"][i]["connections"] = std::vector(graph_node.connections.begin(), graph_node.connections.end());
 				}
 
 				std::string yaml_path = marker_file_;
@@ -185,8 +186,8 @@ namespace potbot_lib{
 				VisualMarkerGraphNode node;
 				node.id = child_name;
 				node.data = &(controllable_markers_[child_name]);
-				node.connections.push_back(parent_name);
-				parent_node.connections.push_back(node.id);
+				node.connections.insert(parent_name);
+				parent_node.connections.insert(node.id);
 				
 				graph_[child_name] = node;
 
