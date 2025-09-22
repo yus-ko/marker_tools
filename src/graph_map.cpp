@@ -12,9 +12,8 @@ namespace potbot_lib{
 		void GraphMap::initializeMenu()
 		{
 			TreeMap::initializeMenu();
-			auto graph_handle = menu_handler_->insert("graph");
 
-			menu_handler_->insert(graph_handle, "add edge",
+			menu_handler_->insert(entry_handles_["add"], "edge",
 				[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) {
 					changeToConnectMode(feedback);});
 			

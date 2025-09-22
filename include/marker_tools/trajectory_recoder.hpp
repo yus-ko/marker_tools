@@ -37,13 +37,10 @@ namespace potbot_lib{
 
                 std::map<std::string, TrajectoryInfo> trajectory_;
 
-                rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
-                rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters);
+                void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
-                void markerFeedback(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
-
-                void initializeMenu();
-                void initializeMarker();
+                void initializeMenu() override;
+                void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
 
                 std::vector<potbot_lib::Pose> interpolateTrajectory(const std::vector<potbot_lib::Pose>& trajectory);
 
@@ -51,8 +48,6 @@ namespace potbot_lib{
                 void saveTrajectory(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback, std::string type = "csv");
                 bool saveCSV(std::string marker_name, std::string file_path);
                 bool saveYAML(std::string marker_name, std::string file_path);
-
-                bool contains(std::string key, const std::map<std::string, TrajectoryInfo> &map);
 
             public:
                 TrajectoryRecoder(std::string name="marker", std::string node_namespace="");

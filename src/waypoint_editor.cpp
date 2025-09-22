@@ -5,9 +5,21 @@ using namespace std::chrono_literals;
 namespace potbot_lib{
 	namespace marker_tools{
 
-		WaypointEditor::WaypointEditor(std::string name, std::string node_namespace) : InteractiveMarkerManager(name,node_namespace)
+		WaypointEditor::WaypointEditor(std::string name, std::string node_namespace)
+			: InteractiveMarkerManager(name,node_namespace)
 		{	
 			pub_waypoints_ = this->create_publisher<nav_msgs::msg::Path>("waypoints", 1);
+		}
+
+		void WaypointEditor::initializeMenu()
+		{
+			InteractiveMarkerManager::initializeMenu();
+
+			entry_handles_["interpolate"] = menu_handler_->insert("interpolate", 
+				[this](const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback){
+					setInterpolate(feedback);});
+			menu_handler_->setCheckState(entry_handles_["interpolate"], 
+				interactive_markers::MenuHandler::CheckState::UNCHECKED);
 		}
 
 		void WaypointEditor::initializeMarker(std::string yaml_path, bool set_default)
@@ -41,6 +53,12 @@ namespace potbot_lib{
 					RCLCPP_INFO(this->get_logger(), "Set to default");
 				}
 			}
+		}
+
+		void WaypointEditor::initializeMarkerServer(const std::map<std::string, VisualMarker> &markers)
+		{
+			InteractiveMarkerManager::initializeMarkerServer(markers);
+			publishWaypointPath(waypoints_);
 		}
 
 		YAML::Node WaypointEditor::saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
@@ -95,6 +113,38 @@ namespace potbot_lib{
 			}
 		}
 
+		void WaypointEditor::setInterpolate(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback)
+		{
+			visualization_msgs::msg::InteractiveMarker int_marker;
+			if (imsrv_->get(feedback->marker_name, int_marker))
+			{
+				std::string title;
+				auto handle = feedback->menu_entry_id;
+				if (menu_handler_->getTitle(handle, title))
+				{
+					interactive_markers::MenuHandler::CheckState state;
+					if (menu_handler_->getCheckState(handle, state))
+					{
+						if (state == interactive_markers::MenuHandler::CheckState::UNCHECKED)
+						{
+							menu_handler_->setCheckState(handle, 
+								interactive_markers::MenuHandler::CheckState::CHECKED);
+							is_interpolate_ = true;
+						}
+						else if (state == interactive_markers::MenuHandler::CheckState::CHECKED)
+						{
+							menu_handler_->setCheckState(handle, 
+								interactive_markers::MenuHandler::CheckState::UNCHECKED);
+							is_interpolate_ = false;
+						}
+						menu_handler_->reApply(*imsrv_);
+						imsrv_->applyChanges();
+						publishWaypointPath(waypoints_);
+					}
+				}
+			}
+		}
+
 		std::vector<potbot_lib::Pose> WaypointEditor::interpolatePath(const std::vector<potbot_lib::Pose>& trajectory)
 		{	
 			auto points_num = trajectory.size();
@@ -141,7 +191,8 @@ namespace potbot_lib{
 			for (const auto &wp:waypoints)
 				waypoints_poses.push_back(potbot_lib::utility::get_pose(wp->marker.pose));
 
-			// auto path = interpolatePath(waypoints_poses);
+			if (is_interpolate_)
+				waypoints_poses = interpolatePath(waypoints_poses);
 
 			nav_msgs::msg::Path msg;
 			potbot_lib::utility::to_msg(waypoints_poses, msg);

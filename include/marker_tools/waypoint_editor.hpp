@@ -13,14 +13,18 @@ namespace potbot_lib{
 
                 rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_waypoints_;
                 std::vector<VisualMarker*> waypoints_;
+                bool is_interpolate_ = false;
 
+                void initializeMenu() override;
                 void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
+                void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers) override;
 
                 void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
                 YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
                 std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
                 void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
+                void setInterpolate(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
                 std::vector<potbot_lib::Pose> interpolatePath(const std::vector<potbot_lib::Pose>& trajectory);
 
                 void publishWaypointPath(const std::vector<VisualMarker*> &waypoints);
