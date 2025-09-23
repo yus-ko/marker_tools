@@ -55,9 +55,10 @@ namespace potbot_lib{
 			}
 		}
 
-		void WaypointEditor::initializeMarkerServer(const std::map<std::string, VisualMarker> &markers)
+		void WaypointEditor::initializeMarkerServer(
+			const std::map<std::string, VisualMarker> &markers, const std::vector<std::string> &marker_with_controller)
 		{
-			InteractiveMarkerManager::initializeMarkerServer(markers);
+			InteractiveMarkerManager::initializeMarkerServer(markers, marker_with_controller);
 			publishWaypointPath(waypoints_);
 		}
 
@@ -199,6 +200,25 @@ namespace potbot_lib{
 			msg.header.frame_id = frame_id_global_;
 			msg.header.stamp = this->get_clock()->now();
 			pub_waypoints_->publish(msg);
+		}
+
+		nav_msgs::msg::Path WaypointEditor::getMsg(const std::vector<VisualMarker*> &waypoints)
+		{
+			std::vector<potbot_lib::Pose> waypoints_poses;
+			for (const auto &wp:waypoints)
+				waypoints_poses.push_back(potbot_lib::utility::get_pose(wp->marker.pose));
+
+			nav_msgs::msg::Path msg;
+			potbot_lib::utility::to_msg(waypoints_poses, msg);
+			msg.header.frame_id = frame_id_global_;
+			msg.header.stamp = this->get_clock()->now();
+
+			return msg;
+		}
+
+		nav_msgs::msg::Path WaypointEditor::getWaypoints()
+		{
+			return getMsg(waypoints_);
 		}
 	}
 }

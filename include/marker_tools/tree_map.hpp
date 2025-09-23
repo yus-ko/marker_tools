@@ -36,7 +36,7 @@ namespace potbot_lib{
 
                 virtual void initializeMenu() override;
                 virtual void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
-                virtual void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers) override;
+                virtual void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers, const std::vector<std::string> &marker_with_controller = {}) override;
 
                 virtual YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 

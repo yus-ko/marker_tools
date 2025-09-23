@@ -33,14 +33,14 @@ namespace potbot_lib{
 
         class TrajectoryRecoder : public InteractiveMarkerManager
         {
-            private:
+            protected:
 
                 std::map<std::string, TrajectoryInfo> trajectory_;
 
-                void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
-                void initializeMenu() override;
-                void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
+                virtual void initializeMenu() override;
+                virtual void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
 
                 std::vector<potbot_lib::Pose> interpolateTrajectory(const std::vector<potbot_lib::Pose>& trajectory);
 
@@ -53,7 +53,7 @@ namespace potbot_lib{
                 TrajectoryRecoder(std::string name="marker", std::string node_namespace="");
                 ~TrajectoryRecoder(){};
 
-                std::vector<VisualMarker>* getVisualMarker();
+                nav_msgs::msg::Path getTrajectory(std::string name) { return trajectory_[name].to_msg(); };
         };
     }
 }

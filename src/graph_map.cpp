@@ -111,9 +111,10 @@ namespace potbot_lib{
 			}
 		}
 
-		void GraphMap::initializeMarkerServer(const std::map<std::string, VisualMarker> &markers)
+		void GraphMap::initializeMarkerServer(
+			const std::map<std::string, VisualMarker> &markers, const std::vector<std::string> &marker_with_controller)
 		{
-			InteractiveMarkerManager::initializeMarkerServer(markers);
+			InteractiveMarkerManager::initializeMarkerServer(markers, marker_with_controller);
 			publishGraphMap(graph_);
 		}
 
@@ -360,6 +361,24 @@ namespace potbot_lib{
 				}
 			}
 			edges_msg_array.markers.push_back(path_msg);
+
+			// visualization_msgs::msg::Marker mesh_msg;
+			// mesh_msg.header = edges_msg.header;
+			// mesh_msg.id = 2;
+			// mesh_msg.ns = "mesh";
+
+			// mesh_msg.scale.x = 1;
+			// mesh_msg.scale.y = 1;
+			// mesh_msg.scale.z = 1;
+			// // int_marker.controls.front().markers.front().color.r = 0;
+			// // int_marker.controls.front().markers.front().color.g = 0;
+			// // int_marker.controls.front().markers.front().color.b = 0;
+			// // int_marker.controls.front().markers.front().color.a = 0;
+			// mesh_msg.type =visualization_msgs::msg::Marker::MESH_RESOURCE;
+			// mesh_msg.mesh_use_embedded_materials = true;
+			// // int_marker.controls.front().markers.front().mesh_resource =  "model://turtlebot3_common/meshes/burger_base.dae";
+			// mesh_msg.mesh_resource = "package://rviz_default_plugins/test_meshes/pr2-base_large.dae";
+			// edges_msg_array.markers.push_back(mesh_msg);
 
 			pub_edges_->publish(edges_msg_array);
 		}

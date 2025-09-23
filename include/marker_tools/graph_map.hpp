@@ -20,7 +20,7 @@ namespace potbot_lib{
 
         class GraphMap : public TreeMap
         {
-            private:
+            protected:
                 std::shared_ptr<interactive_markers::MenuHandler>
                     menu_handler_connect_, 
                     menu_handler_cancel_;
@@ -28,18 +28,18 @@ namespace potbot_lib{
 
                 NodeId connection_source_;
 
-                void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
-                void initializeMenu() override;
-                void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
-                void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers) override;
+                virtual void initializeMenu() override;
+                virtual void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
+                virtual void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers, const std::vector<std::string> &marker_with_controller = {}) override;
 
-                YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
-                std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
-                void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
-                void setStartNode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
-                void setGoalNode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual void setStartNode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual void setGoalNode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
                 void changeToConnectMode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
                 void changeToNormalMode(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);

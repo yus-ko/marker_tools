@@ -62,9 +62,10 @@ namespace potbot_lib{
 			}
 		}
 
-		void TreeMap::initializeMarkerServer(const std::map<std::string, VisualMarker> &markers)
+		void TreeMap::initializeMarkerServer(
+			const std::map<std::string, VisualMarker> &markers, const std::vector<std::string> &marker_with_controller)
 		{
-			InteractiveMarkerManager::initializeMarkerServer(markers);
+			InteractiveMarkerManager::initializeMarkerServer(markers, marker_with_controller);
 			publishTreeMap(tree_);
 		}
 

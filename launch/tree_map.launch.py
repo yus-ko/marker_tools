@@ -11,7 +11,10 @@ def generate_launch_description():
             namespace='',
             output='screen',
             parameters=[
-                {"marker_yaml_path": expanduser("~")+"/potbot_ws/src/marker_tools/params/tree_map.yaml"}
+                {"frame_id_global": "map"},
+                {"marker_yaml_path": expanduser("~")+"/tree_map.yaml"},
+                {"mesh_resource_files": ['file:///opt/ros/humble/share/rviz_default_plugins/test_meshes/pr2-base.dae', 
+                                         'package://rviz_default_plugins/test_meshes/pr2-base.dae']}
             ]
         )
     ])

@@ -9,29 +9,33 @@ namespace potbot_lib{
 
         class WaypointEditor : public InteractiveMarkerManager
         {
-            private:
+            protected:
 
                 rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_waypoints_;
                 std::vector<VisualMarker*> waypoints_;
                 bool is_interpolate_ = false;
 
-                void initializeMenu() override;
-                void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
-                void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers) override;
+                virtual void initializeMenu() override;
+                virtual void initializeMarker(std::string yaml_path = "", bool set_default = true) override;
+                virtual void initializeMarkerServer(const std::map<std::string, VisualMarker> &markers, const std::vector<std::string> &marker_with_controller = {}) override;
 
-                void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
-                YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
-                std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
-                void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual void changePosition(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual YAML::Node saveMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual std::string duplicateMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
+                virtual void deleteMarker(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback) override;
 
                 void setInterpolate(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr &feedback);
                 std::vector<potbot_lib::Pose> interpolatePath(const std::vector<potbot_lib::Pose>& trajectory);
 
                 void publishWaypointPath(const std::vector<VisualMarker*> &waypoints);
 
+                nav_msgs::msg::Path getMsg(const std::vector<VisualMarker*> &waypoints);
+
             public:
                 WaypointEditor(std::string name="marker", std::string node_namespace="");
                 ~WaypointEditor(){};
+
+                nav_msgs::msg::Path getWaypoints();
         };
     }
 }
