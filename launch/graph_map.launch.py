@@ -1,15 +1,17 @@
-import launch
-from launch_ros.actions import LifecycleNode
-import os
+from launch import LaunchDescription
+from launch_ros.actions import LifecycleNode, Node
+from os.path import expanduser, join
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
     package = 'marker_tools'
     package_dir = get_package_share_directory(package)
-    config = os.path.join(package_dir,'params','graph_map.yaml')
+    config = join(package_dir,'params','graph_map.yaml')
+    # config = expanduser("~") + "/graph_map.yaml"
+    rviz = join(package_dir,'rviz','rviz.rviz')
 
-    return launch.LaunchDescription([
+    return LaunchDescription([
         LifecycleNode(
             package=package,
             executable='graph_map',
@@ -22,5 +24,11 @@ def generate_launch_description():
                 {"mesh_resource_files": ['file:///opt/ros/humble/share/rviz_default_plugins/test_meshes/pr2-base.dae', 
                                          'package://rviz_default_plugins/test_meshes/pr2-base.dae']}
             ]
+        ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            arguments=["-d", rviz]
         )
     ])
