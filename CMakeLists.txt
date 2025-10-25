@@ -20,6 +20,11 @@ ament_target_dependencies(marker_tools
   potbot_ros
 )
 
+target_include_directories(marker_tools PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
 install(
   TARGETS marker_tools
   EXPORT export_marker_tools
